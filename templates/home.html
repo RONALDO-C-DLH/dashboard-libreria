@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Librería</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #fff; color: #333; }
+    .tiles { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tile {
+      flex: 1;
+      padding: 20px;
+      background: #f7f7f7;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .tile:hover { background: #eaeaea; }
+    .tile a { text-decoration: none; color: #333; font-weight: bold; display: block; }
+    section { display: none; margin-top: 20px; }
+    section.active { display: block; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    #searchInput { margin: 10px 0; padding: 5px; width: 300px; }
+    #pagination { margin-top: 10px; }
+    #pagination button { padding: 5px 10px; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Librería</h1>
+  <p>Selecciona una sección:</p>
+  <div class="tiles">
+    <div class="tile" onclick="showSection('libros')"><a href="javascript:void(0)">Libros</a></div>
+    <div class="tile" onclick="showSection('autores')"><a href="javascript:void(0)">Autores</a></div>
+    <div class="tile" onclick="showSection('categorias')"><a href="javascript:void(0)">Categorías</a></div>
+    <div class="tile" onclick="showSection('stocks')"><a href="javascript:void(0)">Stock</a></div>
+    <div class="tile" onclick="showSection('ventas')"><a href="javascript:void(0)">Ventas</a></div>
+  </div>
+
+  <!-- SECCIÓN LIBROS -->
+  <section id="libros" class="active">
+    <h2>Libros (Total: {{ libros|length }})</h2>
+    <label for="searchInput">Buscar por título:</label>
+    <input type="text" id="searchInput" placeholder="Escribe…"
+           onkeyup="filterTable()" />
+
+    <!-- Gráfico de stock -->
+    <div style="width:100%; max-width:800px; height:300px; margin-top:20px;">
+      <canvas id="stockChart"></canvas>
+    </div>
+
+    <!-- Tabla de Libros -->
+    <table id="librosTable">
+      <thead>
+        <tr>
+          <th>ID</th><th>Título</th><th>Precio</th><th>Fecha publicación</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in libros %}
+        <tr>
+          <td>{{ l.id }}</td>
+          <td>{{ l.titulo }}</td>
+          <td>{{ l.precio }}</td>
+          <td>{{ l.fecha_publicacion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div id="pagination">
+      <button id="prevBtn" onclick="prevPage()">Anterior</button>
+      <span>Página <span id="pageNum">1</span> de <span id="pageCount">1</span></span>
+      <button id="nextBtn" onclick="nextPage()">Siguiente</button>
+    </div>
+  </section>
+
+  <!-- SECCIÓN AUTORES -->
+  <section id="autores">
+    <h2>Autores (Total: {{ autores|length }})</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Nombre</th><th>Nacionalidad</th></tr></thead>
+      <tbody>
+        {% for a in autores %}
+        <tr>
+          <td>{{ a.id }}</td><td>{{ a.nombre }}</td><td>{{ a.nacionalidad }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECCIÓN CATEGORÍAS -->
+  <section id="categorias">
+    <h2>Categorías (Total: {{ categorias|length }})</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th></tr></thead>
+      <tbody>
+        {% for c in categorias %}
+        <tr>
+          <td>{{ c.id }}</td><td>{{ c.nombre }}</td><td>{{ c.descripcion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECCIÓN STOCK -->
+  <section id="stocks">
+    <h2>Stock (Total registros: {{ stocks|length }})</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Libro</th><th>Cantidad</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for s in stocks %}
+        <tr>
+          <td>{{ s.id }}</td><td>{{ s.libro.titulo }}</td><td>{{ s.cantidad }}</td>
+          <td>{{ s.fecha_actualizacion }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECCIÓN VENTAS -->
+  <section id="ventas">
+    <h2>Ventas (Total registros: {{ ventas|length }})</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Libro</th><th>Fecha</th><th>Cantidad</th><th>Total</th></tr></thead>
+      <tbody>
+        {% for v in ventas %}
+        <tr>
+          <td>{{ v.id }}</td><td>{{ v.libro.titulo }}</td><td>{{ v.fecha_venta }}</td>
+          <td>{{ v.cantidad }}</td><td>{{ v.total }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Gráfico de barras
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    const stockChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: {{ chart_titles|safe }},
+        datasets: [{ label: 'Stock total', data: {{ chart_totals|safe }},
+          backgroundColor: 'rgba(54,162,235,0.5)', borderColor:'rgba(54,162,235,1)', borderWidth:1 }]
+      },
+      options: { scales:{ y:{ beginAtZero:true }}, responsive:true, maintainAspectRatio:false }
+    });
+
+    // Filtrado
+    function filterTable() {
+      const f = document.getElementById("searchInput").value.toUpperCase();
+      const rows = document.querySelectorAll("#librosTable tbody tr");
+      rows.forEach(r => {
+        const txt = r.cells[1].textContent.toUpperCase();
+        r.style.display = txt.includes(f) ? "" : "none";
+      });
+      initPagination();
+    }
+
+    // Paginación
+    let currentPage=1, recordsPerPage=10, pageCount=1;
+    function initPagination(){
+      const rows=Array.from(document.querySelectorAll("#librosTable tbody tr"))
+        .filter(r=>r.style.display!=="none");
+      pageCount=Math.ceil(rows.length/recordsPerPage)||1;
+      document.getElementById("pageCount").textContent=pageCount;
+      goToPage(1,rows);
+    }
+    function goToPage(p, rows=null){
+      if(!rows) rows=document.querySelectorAll("#librosTable tbody tr");
+      currentPage=p;
+      const start=(p-1)*recordsPerPage, end=p*recordsPerPage;
+      rows.forEach((r,i)=>r.style.display=(i>=start&&i<end)?"":"none");
+      document.getElementById("pageNum").textContent=currentPage;
+      document.getElementById("prevBtn").disabled=currentPage===1;
+      document.getElementById("nextBtn").disabled=currentPage===pageCount;
+    }
+    function prevPage(){ if(currentPage>1) goToPage(currentPage-1); }
+    function nextPage(){ if(currentPage<pageCount) goToPage(currentPage+1); }
+    window.addEventListener("load",initPagination);
+
+    // Recarga automática cada 30s
+    setInterval(async()=>{
+      try{
+        const res=await fetch("{% url 'libro_data' %}");
+        const data=await res.json();
+        // actualizar tabla
+        const tb=document.querySelector("#librosTable tbody");
+        tb.innerHTML="";
+        data.libros.forEach(lb=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML=`
+            <td>${lb.id}</td><td>${lb.titulo}</td>
+            <td>${lb.precio}</td><td>${lb.fecha_publicacion}</td>
+          `;
+          tb.appendChild(tr);
+        });
+        // actualizar gráfico
+        const map=new Map(data.stock.map(i=>[i.libro_id,i.total_stock]));
+        stockChart.data.datasets[0].data=data.libros.map(lb=>map.get(lb.id)||0);
+        stockChart.update();
+        initPagination();
+      }catch(e){console.error(e);}
+    },30000);
+
+    // Navegación por secciones
+    function showSection(id){
+      document.querySelectorAll('section').forEach(s=>s.classList.toggle('active',s.id===id));
+    }
+  </script>
+</body>
+</html>

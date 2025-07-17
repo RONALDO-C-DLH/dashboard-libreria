@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Listado de Ventas</title></head><body>
+<h1>Listado de Ventas</h1><a href="{% url 'venta_create' %}">Nueva Venta</a>
+<table border="1" cellpadding="8" cellspacing="0"><thead><tr><th>ID</th><th>Libro</th><th>Fecha</th><th>Cantidad</th><th>Total</th><th>Acciones</th></tr></thead><tbody>
+{% for v in ventas %}<tr>
+<td>{{ v.id }}</td><td>{{ v.libro.titulo }}</td><td>{{ v.fecha_venta }}</td><td>{{ v.cantidad }}</td><td>{{ v.total }}</td>
+<td>
+  <a href="{% url 'venta_update' v.id %}">Editar</a>
+  <form action="{% url 'venta_delete' v.id %}" method="post" style="display:inline;">
+    {% csrf_token %}<button type="submit">Eliminar</button>
+  </form>
+</td></tr>{% empty %}
+<tr><td colspan="6">No hay ventas registradas.</td></tr>{% endfor %}
+</tbody></table><a href="{% url 'home' %}">Volver al Dashboard</a>
+</body></html>

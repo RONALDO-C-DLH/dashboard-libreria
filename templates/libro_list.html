@@ -1,0 +1,44 @@
+<!-- File: templates/libro_list.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listado de Libros</title>
+</head>
+<body>
+  <h1>Listado de Libros</h1>
+  <a href="{% url 'libro_create' %}">Nuevo Libro</a>
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Precio</th>
+        <th>Fecha de publicación</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for libro in libros %}
+      <tr>
+        <td>{{ libro.id }}</td>
+        <td>{{ libro.titulo }}</td>
+        <td>{{ libro.precio }}</td>
+        <td>{{ libro.fecha_publicacion }}</td>
+        <td>
+          <a href="{% url 'libro_update' libro.id %}">Editar</a>
+          <form action="{% url 'libro_delete' libro.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">No hay libros registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'home' %}">Volver al Dashboard</a>
+</body>
+</html>

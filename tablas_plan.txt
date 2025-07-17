@@ -1,0 +1,28 @@
+Tabla: Libro
+  - id: Integer (PK, autoincremental)
+  - titulo: Varchar(200)
+  - precio: Decimal(10,2)
+  - fecha_publicacion: Date
+
+Tabla: Autor
+  - id: Integer (PK, autoincremental)
+  - nombre: Varchar(100)
+  - nacionalidad: Varchar(50)
+
+Tabla: Categoria
+  - id: Integer (PK, autoincremental)
+  - nombre: Varchar(100)
+  - descripcion: Text
+
+Tabla: Stock
+  - id: Integer (PK, autoincremental)
+  - libro_id: Integer (FK → Libro.id)
+  - cantidad: Integer
+  - fecha_actualizacion: Date
+
+Tabla: Venta
+  - id: Integer (PK, autoincremental)
+  - libro_id: Integer (FK → Libro.id)
+  - fecha_venta: Date
+  - cantidad: Integer
+  - total: Decimal(10,2)

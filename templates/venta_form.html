@@ -1,0 +1,5 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{% if form.instance.pk %}Editar Venta{% else %}Nueva Venta{% endif %}</title></head><body>
+<h1>{% if form.instance.pk %}Editar Venta{% else %}Nueva Venta{% endif %}</h1>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Guardar</button></form>
+<a href="{% url 'venta_list' %}">Cancelar</a></body></html>

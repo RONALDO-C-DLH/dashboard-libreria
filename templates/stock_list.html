@@ -1,0 +1,14 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Listado de Stock</title></head><body>
+<h1>Listado de Stock</h1><a href="{% url 'stock_create' %}">Nuevo Stock</a>
+<table border="1" cellpadding="8" cellspacing="0"><thead><tr><th>ID</th><th>Libro</th><th>Cantidad</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody>
+{% for s in stocks %}<tr>
+<td>{{ s.id }}</td><td>{{ s.libro.titulo }}</td><td>{{ s.cantidad }}</td><td>{{ s.fecha_actualizacion }}</td>
+<td>
+  <a href="{% url 'stock_update' s.id %}">Editar</a>
+  <form action="{% url 'stock_delete' s.id %}" method="post" style="display:inline;">
+    {% csrf_token %}<button type="submit">Eliminar</button>
+  </form>
+</td></tr>{% empty %}
+<tr><td colspan="5">No hay registros de stock.</td></tr>{% endfor %}
+</tbody></table><a href="{% url 'home' %}">Volver al Dashboard</a>
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listado de Autores</title>
+</head>
+<body>
+  <h1>Listado de Autores</h1>
+  <a href="{% url 'autor_create' %}">Nuevo Autor</a>
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Nacionalidad</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for autor in autores %}
+      <tr>
+        <td>{{ autor.id }}</td>
+        <td>{{ autor.nombre }}</td>
+        <td>{{ autor.nacionalidad }}</td>
+        <td>
+          <a href="{% url 'autor_update' autor.id %}">Editar</a>
+          <form action="{% url 'autor_delete' autor.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">No hay autores registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'home' %}">Volver al Dashboard</a>
+</body>
+</html>
