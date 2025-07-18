@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum
 from django import forms
+from django.views.generic import ListView
 from .models import Libro, Autor, Categoria, Stock, Venta
 
 
@@ -12,6 +13,25 @@ class LibroForm(forms.ModelForm):
         widgets = {
             'fecha_publicacion': forms.DateInput(attrs={'type': 'date'})
         }
+
+class LibroListView(ListView):
+    """Listado de libros con paginación y filtro por título."""
+    model = Libro
+    template_name = 'libro_list.html'
+    context_object_name = 'libros'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('id')
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(titulo__icontains=q)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['q'] = self.request.GET.get('q', '')
+        return context
 
 def home(request):
     # Cargar todos los registros
