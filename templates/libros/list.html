@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Libros{% endblock %}
+{% block content %}
+<h1>Libros</h1>
+<form method="get" class="mb-3">
+  <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por título">
+</form>
+<a class="btn btn-primary mb-2" href="{% url 'libro_create' %}">Nuevo Libro</a>
+<table class="table table-bordered">
+  <thead>
+    <tr><th>ID</th><th>Título</th><th>Fecha publicación</th><th>Precio</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for obj in object_list %}
+    <tr>
+      <td>{{ obj.id }}</td>
+      <td>{{ obj.titulo }}</td>
+      <td>{{ obj.fecha_publicacion }}</td>
+      <td>{{ obj.precio }}</td>
+      <td>
+        <a href="{% url 'libro_update' obj.id %}">Editar</a>
+        <a href="{% url 'libro_delete' obj.id %}">Eliminar</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No hay registros</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'pagination.html' with page_obj=page_obj q=q %}
+{% endblock %}

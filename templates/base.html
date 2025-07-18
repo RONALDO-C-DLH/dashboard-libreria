@@ -3,11 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Libreria{% endblock %}</title>
+    <title>{% block title %}Dashboard Librería{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    {% block content %}{% endblock %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'home' %}">Librería</a>
+    <div class="navbar-nav">
+      <a class="nav-link" href="{%- url 'libro_list' %}">Libros</a>
+      <a class="nav-link" href="{%- url 'dashboard_libros' %}">Dash Libros</a>
+      <a class="nav-link" href="{%- url 'autor_list' %}">Autores</a>
+      <a class="nav-link" href="{%- url 'dashboard_autores' %}">Dash Autores</a>
+      <a class="nav-link" href="{%- url 'categoria_list' %}">Categorías</a>
+      <a class="nav-link" href="{%- url 'dashboard_categorias' %}">Dash Categorías</a>
+      <a class="nav-link" href="{%- url 'stock_list' %}">Stock</a>
+      <a class="nav-link" href="{%- url 'dashboard_stock' %}">Dash Stock</a>
+      <a class="nav-link" href="{%- url 'venta_list' %}">Ventas</a>
+      <a class="nav-link" href="{%- url 'dashboard_ventas' %}">Dash Ventas</a>
+    </div>
+  </div>
+</nav>
+<div class="container">
+  {% if messages %}
+    <ul class="list-unstyled">
+    {% for message in messages %}
+      <li class="alert alert-{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</div>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
-

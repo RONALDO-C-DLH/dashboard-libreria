@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Categorías{% endblock %}
+{% block content %}
+<h1>Categorías</h1>
+<form method="get" class="mb-3">
+  <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nombre">
+</form>
+<a class="btn btn-primary mb-2" href="{% url 'categoria_create' %}">Nueva Categoría</a>
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>Nombre</th><th></th></tr></thead>
+  <tbody>
+    {% for obj in object_list %}
+    <tr>
+      <td>{{ obj.id }}</td>
+      <td>{{ obj.nombre }}</td>
+      <td>
+        <a href="{% url 'categoria_update' obj.id %}">Editar</a>
+        <a href="{% url 'categoria_delete' obj.id %}">Eliminar</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">No hay registros</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'pagination.html' with page_obj=page_obj q=q %}
+{% endblock %}
