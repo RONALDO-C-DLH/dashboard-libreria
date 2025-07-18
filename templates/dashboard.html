@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Ventas{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .chart-container{width:100%;max-width:600px;height:300px;margin:20px auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Dashboard de Ventas</h1>
+<div class="chart-container"><canvas id="barChart"></canvas></div>
+<div class="chart-container"><canvas id="lineChart"></canvas></div>
+<div class="chart-container"><canvas id="pieChart"></canvas></div>
+<script>
+let barChart,lineChart,pieChart;
+
+function initCharts(labels,data){
+    const barCtx=document.getElementById('barChart').getContext('2d');
+    const lineCtx=document.getElementById('lineChart').getContext('2d');
+    const pieCtx=document.getElementById('pieChart').getContext('2d');
+    barChart=new Chart(barCtx,{type:'bar',data:{labels:labels,datasets:[{label:'Ventas',data:data,backgroundColor:'rgba(54,162,235,0.5)',borderColor:'rgba(54,162,235,1)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false}});
+    lineChart=new Chart(lineCtx,{type:'line',data:{labels:labels,datasets:[{label:'Ventas',data:data,borderColor:'rgba(255,99,132,1)',fill:false}]},options:{responsive:true,maintainAspectRatio:false}});
+    pieChart=new Chart(pieCtx,{type:'pie',data:{labels:labels,datasets:[{data:data,backgroundColor:labels.map((_,i)=>`hsl(${i*40%360},70%,70%)`)}]},options:{responsive:true,maintainAspectRatio:false}});
+}
+
+function updateCharts(labels,data){
+    if(!barChart){initCharts(labels,data);return;}
+    [barChart,lineChart,pieChart].forEach(chart=>{chart.data.labels=labels;chart.data.datasets[0].data=data;chart.update();});
+}
+
+async function loadData(){
+    try{
+        const res=await fetch('/api/ventas_data/');
+        if(!res.ok) return;
+        const d=await res.json();
+        updateCharts(d.fechas,d.totales);
+    }catch(e){console.error(e);}
+}
+
+loadData();
+setInterval(loadData,30000);
+</script>
+{% endblock %}
+
