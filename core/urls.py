@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     home,
-    libro_list, libro_create, libro_update, libro_delete, libro_data,
+    LibroListView, libro_list, libro_create, libro_update, libro_delete, libro_data,
     autor_list, autor_create, autor_update, autor_delete,
     categoria_list, categoria_create, categoria_update, categoria_delete,
     stock_list, stock_create, stock_update, stock_delete,
@@ -13,7 +13,7 @@ urlpatterns = [
     path('', home, name='home'),
 
     # Libro
-    path('libros/', libro_list, name='libro_list'),
+    path('libros/', LibroListView.as_view(), name='libro_list'),
     path('libros/nuevo/', libro_create, name='libro_create'),
     path('libros/<int:pk>/editar/', libro_update, name='libro_update'),
     path('libros/<int:pk>/eliminar/', libro_delete, name='libro_delete'),
