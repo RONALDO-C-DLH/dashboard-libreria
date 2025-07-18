@@ -6,11 +6,13 @@ from .views import (
     categoria_list, categoria_create, categoria_update, categoria_delete,
     stock_list, stock_create, stock_update, stock_delete,
     venta_list, venta_create, venta_update, venta_delete,
-    ventas_data 
+    ventas_data,
+    dashboard,
 )
 
 urlpatterns = [
     path('', home, name='home'),
+    path('dashboard/', dashboard, name='dashboard'),
 
     # Libro
     path('libros/', libro_list, name='libro_list'),
@@ -42,5 +44,7 @@ urlpatterns = [
     path('ventas/nuevo/', venta_create, name='venta_create'),
     path('ventas/<int:pk>/editar/', venta_update, name='venta_update'),
     path('ventas/<int:pk>/eliminar/', venta_delete, name='venta_delete'),
+
+    # API
+    path('api/ventas_data/', ventas_data, name='ventas_data'),
 ]
-path('api/ventas_data/', ventas_data, name='ventas_data'),

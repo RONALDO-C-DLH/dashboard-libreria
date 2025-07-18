@@ -41,6 +41,10 @@ def home(request):
         'chart_totals': chart_totals,
     })
 
+def dashboard(request):
+    """Simple view to render the sales dashboard."""
+    return render(request, 'dashboard.html')
+
 def libro_list(request):
     libros = Libro.objects.all()
     return render(request, 'libro_list.html', {'libros': libros})
