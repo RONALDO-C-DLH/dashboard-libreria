@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Autor{% endblock %}
+{% block content %}
+<h1>{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Autor</h1>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{% url 'autor_list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

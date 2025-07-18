@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Stock{% endblock %}
+{% block content %}
+<h1>Stock</h1>
+<form method="get" class="mb-3">
+  <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por libro">
+</form>
+<a class="btn btn-primary mb-2" href="{% url 'stock_create' %}">Nuevo Registro</a>
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>Libro</th><th>Cantidad</th><th>Fecha</th><th></th></tr></thead>
+  <tbody>
+    {% for obj in object_list %}
+    <tr>
+      <td>{{ obj.id }}</td>
+      <td>{{ obj.libro.titulo }}</td>
+      <td>{{ obj.cantidad_actual }}</td>
+      <td>{{ obj.fecha_actualizacion }}</td>
+      <td>
+        <a href="{% url 'stock_update' obj.id %}">Editar</a>
+        <a href="{% url 'stock_delete' obj.id %}">Eliminar</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No hay registros</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'pagination.html' with page_obj=page_obj q=q %}
+{% endblock %}

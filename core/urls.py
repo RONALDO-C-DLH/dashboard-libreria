@@ -1,50 +1,46 @@
 from django.urls import path
-from .views import (
-    home,
-    LibroListView, libro_list, libro_create, libro_update, libro_delete, libro_data,
-    autor_list, autor_create, autor_update, autor_delete,
-    categoria_list, categoria_create, categoria_update, categoria_delete,
-    stock_list, stock_create, stock_update, stock_delete,
-    venta_list, venta_create, venta_update, venta_delete,
-    ventas_data,
-    dashboard,
-)
+from . import views
 
 urlpatterns = [
-    path('', home, name='home'),
-    path('dashboard/', dashboard, name='dashboard'),
+    path('', views.home, name='home'),
 
-    # Libro
-    path('libros/', LibroListView.as_view(), name='libro_list'),
-    path('libros/nuevo/', libro_create, name='libro_create'),
-    path('libros/<int:pk>/editar/', libro_update, name='libro_update'),
-    path('libros/<int:pk>/eliminar/', libro_delete, name='libro_delete'),
-    path('api/libro_data/', libro_data, name='libro_data'),
+    # Libros
+    path('libros/', views.LibroListView.as_view(), name='libro_list'),
+    path('libros/nuevo/', views.LibroCreateView.as_view(), name='libro_create'),
+    path('libros/<int:pk>/editar/', views.LibroUpdateView.as_view(), name='libro_update'),
+    path('libros/<int:pk>/eliminar/', views.LibroDeleteView.as_view(), name='libro_delete'),
+    path('dashboard/libros/', views.DashboardLibroView.as_view(), name='dashboard_libros'),
 
-    # Autor
-    path('autores/', autor_list, name='autor_list'),
-    path('autores/nuevo/', autor_create, name='autor_create'),
-    path('autores/<int:pk>/editar/', autor_update, name='autor_update'),
-    path('autores/<int:pk>/eliminar/', autor_delete, name='autor_delete'),
+    # Autores
+    path('autores/', views.AutorListView.as_view(), name='autor_list'),
+    path('autores/nuevo/', views.AutorCreateView.as_view(), name='autor_create'),
+    path('autores/<int:pk>/editar/', views.AutorUpdateView.as_view(), name='autor_update'),
+    path('autores/<int:pk>/eliminar/', views.AutorDeleteView.as_view(), name='autor_delete'),
+    path('dashboard/autores/', views.DashboardAutorView.as_view(), name='dashboard_autores'),
 
-    # Categoria
-    path('categorias/', categoria_list, name='categoria_list'),
-    path('categorias/nuevo/', categoria_create, name='categoria_create'),
-    path('categorias/<int:pk>/editar/', categoria_update, name='categoria_update'),
-    path('categorias/<int:pk>/eliminar/', categoria_delete, name='categoria_delete'),
+    # Categorias
+    path('categorias/', views.CategoriaListView.as_view(), name='categoria_list'),
+    path('categorias/nuevo/', views.CategoriaCreateView.as_view(), name='categoria_create'),
+    path('categorias/<int:pk>/editar/', views.CategoriaUpdateView.as_view(), name='categoria_update'),
+    path('categorias/<int:pk>/eliminar/', views.CategoriaDeleteView.as_view(), name='categoria_delete'),
+    path('dashboard/categorias/', views.DashboardCategoriaView.as_view(), name='dashboard_categorias'),
 
     # Stock
-    path('stocks/', stock_list, name='stock_list'),
-    path('stocks/nuevo/', stock_create, name='stock_create'),
-    path('stocks/<int:pk>/editar/', stock_update, name='stock_update'),
-    path('stocks/<int:pk>/eliminar/', stock_delete, name='stock_delete'),
+    path('stock/', views.StockListView.as_view(), name='stock_list'),
+    path('stock/nuevo/', views.StockCreateView.as_view(), name='stock_create'),
+    path('stock/<int:pk>/editar/', views.StockUpdateView.as_view(), name='stock_update'),
+    path('stock/<int:pk>/eliminar/', views.StockDeleteView.as_view(), name='stock_delete'),
+    path('dashboard/stock/', views.DashboardStockView.as_view(), name='dashboard_stock'),
 
-    # Venta
-    path('ventas/', venta_list, name='venta_list'),
-    path('ventas/nuevo/', venta_create, name='venta_create'),
-    path('ventas/<int:pk>/editar/', venta_update, name='venta_update'),
-    path('ventas/<int:pk>/eliminar/', venta_delete, name='venta_delete'),
+    # Ventas
+    path('ventas/', views.VentaListView.as_view(), name='venta_list'),
+    path('ventas/nuevo/', views.VentaCreateView.as_view(), name='venta_create'),
+    path('ventas/<int:pk>/editar/', views.VentaUpdateView.as_view(), name='venta_update'),
+    path('ventas/<int:pk>/eliminar/', views.VentaDeleteView.as_view(), name='venta_delete'),
+    path('dashboard/ventas/', views.DashboardVentaView.as_view(), name='dashboard_ventas'),
 
-    # API
-    path('api/ventas_data/', ventas_data, name='ventas_data'),
+    # AJAX demo
+    path('ajax/insert/', views.ajax_insert_demo, name='ajax_insert'),
+    path('ajax/update/', views.ajax_update_demo, name='ajax_update'),
+    path('ajax/delete/', views.ajax_delete_demo, name='ajax_delete'),
 ]

@@ -1,311 +1,268 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Sum
-from django import forms
-from django.views.generic import ListView
+from django.urls import reverse_lazy
+from django.views.generic import (
+    ListView, CreateView, UpdateView, DeleteView, TemplateView
+)
+from django.http import JsonResponse
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Count, Sum
+
 from .models import Libro, Autor, Categoria, Stock, Venta
+from .forms import (
+    LibroForm, AutorForm, CategoriaForm, StockForm, VentaForm
+)
 
 
-# ModelForm para Libro
-class LibroForm(forms.ModelForm):
-    class Meta:
-        model = Libro
-        fields = ['titulo', 'precio', 'fecha_publicacion']
-        widgets = {
-            'fecha_publicacion': forms.DateInput(attrs={'type': 'date'})
-        }
-
-class LibroListView(ListView):
-    """Listado de libros con paginación y filtro por título."""
-    model = Libro
-    template_name = 'libro_list.html'
-    context_object_name = 'libros'
+# ----- List Views ------------------------------------------------------------
+class BaseListView(ListView):
     paginate_by = 10
-
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('id')
+        qs = super().get_queryset().order_by('id')
         q = self.request.GET.get('q')
         if q:
-            queryset = queryset.filter(titulo__icontains=q)
-        return queryset
+            field = 'titulo__icontains' if hasattr(self.model, 'titulo') else 'nombre__icontains'
+            qs = qs.filter(**{field: q})
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['q'] = self.request.GET.get('q', '')
         return context
 
+
+class LibroListView(BaseListView):
+    model = Libro
+    template_name = 'libros/list.html'
+
+class AutorListView(BaseListView):
+    model = Autor
+    template_name = 'autores/list.html'
+
+class CategoriaListView(BaseListView):
+    model = Categoria
+    template_name = 'categorias/list.html'
+
+class StockListView(BaseListView):
+    model = Stock
+    template_name = 'stocks/list.html'
+
+class VentaListView(BaseListView):
+    model = Venta
+    template_name = 'ventas/list.html'
+
+# ----- Create Views ---------------------------------------------------------
+class BaseCreateView(CreateView):
+    template_name_suffix = '/form'
+    success_url = None
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Registro creado correctamente')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.success_url
+
+class LibroCreateView(BaseCreateView):
+    model = Libro
+    form_class = LibroForm
+    success_url = reverse_lazy('libro_list')
+
+class AutorCreateView(BaseCreateView):
+    model = Autor
+    form_class = AutorForm
+    success_url = reverse_lazy('autor_list')
+
+class CategoriaCreateView(BaseCreateView):
+    model = Categoria
+    form_class = CategoriaForm
+    success_url = reverse_lazy('categoria_list')
+
+class StockCreateView(BaseCreateView):
+    model = Stock
+    form_class = StockForm
+    success_url = reverse_lazy('stock_list')
+
+class VentaCreateView(BaseCreateView):
+    model = Venta
+    form_class = VentaForm
+    success_url = reverse_lazy('venta_list')
+
+# ----- Update Views ---------------------------------------------------------
+class BaseUpdateView(UpdateView):
+    template_name_suffix = '/form'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Registro actualizado correctamente')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(f'{self.model._meta.model_name}_list')
+
+class LibroUpdateView(BaseUpdateView):
+    model = Libro
+    form_class = LibroForm
+
+class AutorUpdateView(BaseUpdateView):
+    model = Autor
+    form_class = AutorForm
+
+class CategoriaUpdateView(BaseUpdateView):
+    model = Categoria
+    form_class = CategoriaForm
+
+class StockUpdateView(BaseUpdateView):
+    model = Stock
+    form_class = StockForm
+
+class VentaUpdateView(BaseUpdateView):
+    model = Venta
+    form_class = VentaForm
+
+# ----- Delete Views ---------------------------------------------------------
+class BaseDeleteView(DeleteView):
+    template_name_suffix = '/confirm_delete'
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Registro eliminado correctamente')
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy(f'{self.model._meta.model_name}_list')
+
+class LibroDeleteView(BaseDeleteView):
+    model = Libro
+
+class AutorDeleteView(BaseDeleteView):
+    model = Autor
+
+class CategoriaDeleteView(BaseDeleteView):
+    model = Categoria
+
+class StockDeleteView(BaseDeleteView):
+    model = Stock
+
+class VentaDeleteView(BaseDeleteView):
+    model = Venta
+
+# ----- Dashboard Views ------------------------------------------------------
+class DashboardLibroView(TemplateView):
+    template_name = 'dashboard_libros.html'
+
+    def get_data(self):
+        qs = Libro.objects.values('fecha_publicacion').annotate(total=Count('id')).order_by('fecha_publicacion')
+        return list(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = self.get_data()
+        context['total'] = Libro.objects.count()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('ajax'):
+            return JsonResponse(context['data'], safe=False)
+        return super().render_to_response(context, **response_kwargs)
+
+class DashboardAutorView(TemplateView):
+    template_name = 'dashboard_autores.html'
+
+    def get_data(self):
+        qs = Autor.objects.values('fecha_nacimiento').annotate(total=Count('id')).order_by('fecha_nacimiento')
+        return list(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = self.get_data()
+        context['total'] = Autor.objects.count()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('ajax'):
+            return JsonResponse(context['data'], safe=False)
+        return super().render_to_response(context, **response_kwargs)
+
+class DashboardCategoriaView(TemplateView):
+    template_name = 'dashboard_categorias.html'
+
+    def get_data(self):
+        qs = Categoria.objects.values('nombre').annotate(total=Count('id'))
+        return list(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = self.get_data()
+        context['total'] = Categoria.objects.count()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('ajax'):
+            return JsonResponse(context['data'], safe=False)
+        return super().render_to_response(context, **response_kwargs)
+
+class DashboardStockView(TemplateView):
+    template_name = 'dashboard_stocks.html'
+
+    def get_data(self):
+        qs = Stock.objects.values('fecha_actualizacion').annotate(total=Sum('cantidad_actual')).order_by('fecha_actualizacion')
+        return list(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = self.get_data()
+        context['total'] = Stock.objects.aggregate(total=Sum('cantidad_actual'))['total'] or 0
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('ajax'):
+            return JsonResponse(context['data'], safe=False)
+        return super().render_to_response(context, **response_kwargs)
+
+class DashboardVentaView(TemplateView):
+    template_name = 'dashboard_ventas.html'
+
+    def get_data(self):
+        qs = Venta.objects.values('fecha_venta').annotate(total=Sum('cantidad_vendida')).order_by('fecha_venta')
+        return list(qs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['data'] = self.get_data()
+        context['total'] = Venta.objects.aggregate(total=Sum('cantidad_vendida'))['total'] or 0
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('ajax'):
+            return JsonResponse(context['data'], safe=False)
+        return super().render_to_response(context, **response_kwargs)
+
+# ----- AJAX demo endpoints --------------------------------------------------
+def ajax_insert_demo(request):
+    """Insertar 5 libros y 5 ventas de ejemplo."""
+    for i in range(5):
+        libro = Libro.objects.create(
+            titulo=f'Demo {timezone.now().timestamp()}-{i}',
+            fecha_publicacion=timezone.now().date(),
+            precio=10+i
+        )
+        Venta.objects.create(libro=libro, cantidad_vendida=1+i, fecha_venta=timezone.now().date())
+    return JsonResponse({'status': 'ok'})
+
+def ajax_update_demo(request):
+    libros = Libro.objects.all()[:3]
+    for l in libros:
+        l.precio += 1
+        l.save()
+    ventas = Venta.objects.all()[:3]
+    for v in ventas:
+        v.cantidad_vendida += 1
+        v.save()
+    return JsonResponse({'status': 'ok'})
+
+def ajax_delete_demo(request):
+    ids = list(Libro.objects.values_list('id', flat=True).order_by('-id')[:2])
+    Libro.objects.filter(id__in=ids).delete()
+    return JsonResponse({'status': 'ok'})
+
+
 def home(request):
-    # Cargar todos los registros
-    libros     = Libro.objects.all()
-    autores    = Autor.objects.all()
-    categorias = Categoria.objects.all()
-    stocks     = Stock.objects.select_related('libro').all()
-    ventas     = Venta.objects.select_related('libro').all()
-
-    # Datos para gráfico de stock por libro
-    stock_qs = (
-        Stock.objects
-        .values('libro__titulo')
-        .annotate(total_stock=Sum('cantidad'))
-        .order_by('libro__titulo')
-    )
-    chart_titles = [item['libro__titulo'] for item in stock_qs]
-    chart_totals = [item['total_stock']   for item in stock_qs]
-
-    return render(request, 'home.html', {
-        'libros':     libros,
-        'autores':    autores,
-        'categorias': categorias,
-        'stocks':     stocks,
-        'ventas':     ventas,
-        'chart_titles': chart_titles,
-        'chart_totals': chart_totals,
-    })
-
-def dashboard(request):
-    """Simple view to render the sales dashboard."""
-    return render(request, 'dashboard.html')
-
-def libro_list(request):
-    libros = Libro.objects.all()
-    return render(request, 'libro_list.html', {'libros': libros})
-
-def libro_create(request):
-    if request.method == 'POST':
-        form = LibroForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('libro_list')
-    else:
-        form = LibroForm()
-    return render(request, 'libro_form.html', {'form': form})
-
-def libro_update(request, pk):
-    libro = get_object_or_404(Libro, pk=pk)
-    if request.method == 'POST':
-        form = LibroForm(request.POST, instance=libro)
-        if form.is_valid():
-            form.save()
-            return redirect('libro_list')
-    else:
-        form = LibroForm(instance=libro)
-    return render(request, 'libro_form.html', {'form': form})
-
-def libro_delete(request, pk):
-    libro = get_object_or_404(Libro, pk=pk)
-    if request.method == 'POST':
-        libro.delete()
-        return redirect('libro_list')
-    return render(request, 'libro_confirm_delete.html', {'libro': libro})
-
-from django.http import JsonResponse
-
-def libro_data(request):
-    # Listado de libros
-    libros = list(
-        Libro.objects
-        .values('id', 'titulo', 'precio', 'fecha_publicacion')
-        .order_by('id')
-    )
-    # Stock total por libro (ID y cantidad)
-    stock_qs = (
-        Stock.objects
-        .values('libro_id')
-        .annotate(total_stock=Sum('cantidad'))
-        .order_by('libro_id')
-    )
-    stock = [
-        {'libro_id': item['libro_id'], 'total_stock': item['total_stock']}
-        for item in stock_qs
-    ]
-    return JsonResponse({'libros': libros, 'stock': stock})
-
-from django.shortcuts import render, redirect
-
-from .models import Autor
-from django.shortcuts import get_object_or_404
-from django import forms
-
-# ModelForm para Autor
-class AutorForm(forms.ModelForm):
-    class Meta:
-        model = Autor
-        fields = ['nombre', 'nacionalidad']
-
-# Listado de Autores
-def autor_list(request):
-    autores = Autor.objects.all()
-    return render(request, 'autor_list.html', {'autores': autores})
-
-# Crear Autor
-def autor_create(request):
-    if request.method == 'POST':
-        form = AutorForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('autor_list')
-    else:
-        form = AutorForm()
-    return render(request, 'autor_form.html', {'form': form})
-
-# Editar Autor
-def autor_update(request, pk):
-    autor = get_object_or_404(Autor, pk=pk)
-    if request.method == 'POST':
-        form = AutorForm(request.POST, instance=autor)
-        if form.is_valid():
-            form.save()
-            return redirect('autor_list')
-    else:
-        form = AutorForm(instance=autor)
-    return render(request, 'autor_form.html', {'form': form})
-
-# Eliminar Autor
-def autor_delete(request, pk):
-    autor = get_object_or_404(Autor, pk=pk)
-    if request.method == 'POST':
-        autor.delete()
-        return redirect('autor_list')
-    return render(request, 'autor_confirm_delete.html', {'autor': autor})
-# ── CRUD para Categoria ───────────────────────────────────────────────────────
-
-class CategoriaForm(forms.ModelForm):
-    class Meta:
-        model = Categoria
-        fields = ['nombre', 'descripcion']
-
-def categoria_list(request):
-    categorias = Categoria.objects.all()
-    return render(request, 'categoria_list.html', {'categorias': categorias})
-
-def categoria_create(request):
-    if request.method == 'POST':
-        form = CategoriaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('categoria_list')
-    else:
-        form = CategoriaForm()
-    return render(request, 'categoria_form.html', {'form': form})
-
-def categoria_update(request, pk):
-    categoria = get_object_or_404(Categoria, pk=pk)
-    if request.method == 'POST':
-        form = CategoriaForm(request.POST, instance=categoria)
-        if form.is_valid():
-            form.save()
-            return redirect('categoria_list')
-    else:
-        form = CategoriaForm(instance=categoria)
-    return render(request, 'categoria_form.html', {'form': form})
-
-def categoria_delete(request, pk):
-    categoria = get_object_or_404(Categoria, pk=pk)
-    if request.method == 'POST':
-        categoria.delete()
-        return redirect('categoria_list')
-    return render(request, 'categoria_confirm_delete.html', {'categoria': categoria})
-
-
-# ── CRUD para Stock ──────────────────────────────────────────────────────────
-
-class StockForm(forms.ModelForm):
-    class Meta:
-        model = Stock
-        fields = ['libro', 'cantidad', 'fecha_actualizacion']
-        widgets = {
-            'fecha_actualizacion': forms.DateInput(attrs={'type': 'date'})
-        }
-
-def stock_list(request):
-    stocks = Stock.objects.select_related('libro').all()
-    return render(request, 'stock_list.html', {'stocks': stocks})
-
-def stock_create(request):
-    if request.method == 'POST':
-        form = StockForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('stock_list')
-    else:
-        form = StockForm()
-    return render(request, 'stock_form.html', {'form': form})
-
-def stock_update(request, pk):
-    stock = get_object_or_404(Stock, pk=pk)
-    if request.method == 'POST':
-        form = StockForm(request.POST, instance=stock)
-        if form.is_valid():
-            form.save()
-            return redirect('stock_list')
-    else:
-        form = StockForm(instance=stock)
-    return render(request, 'stock_form.html', {'form': form})
-
-def stock_delete(request, pk):
-    stock = get_object_or_404(Stock, pk=pk)
-    if request.method == 'POST':
-        stock.delete()
-        return redirect('stock_list')
-    return render(request, 'stock_confirm_delete.html', {'stock': stock})
-
-
-# ── CRUD para Venta ──────────────────────────────────────────────────────────
-
-class VentaForm(forms.ModelForm):
-    class Meta:
-        model = Venta
-        fields = ['libro', 'fecha_venta', 'cantidad', 'total']
-        widgets = {
-            'fecha_venta': forms.DateInput(attrs={'type': 'date'})
-        }
-
-def venta_list(request):
-    ventas = Venta.objects.select_related('libro').all()
-    return render(request, 'venta_list.html', {'ventas': ventas})
-
-def venta_create(request):
-    if request.method == 'POST':
-        form = VentaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('venta_list')
-    else:
-        form = VentaForm()
-    return render(request, 'venta_form.html', {'form': form})
-
-def venta_update(request, pk):
-    venta = get_object_or_404(Venta, pk=pk)
-    if request.method == 'POST':
-        form = VentaForm(request.POST, instance=venta)
-        if form.is_valid():
-            form.save()
-            return redirect('venta_list')
-    else:
-        form = VentaForm(instance=venta)
-    return render(request, 'venta_form.html', {'form': form})
-
-def venta_delete(request, pk):
-    venta = get_object_or_404(Venta, pk=pk)
-    if request.method == 'POST':
-        venta.delete()
-        return redirect('venta_list')
-    return render(request, 'venta_confirm_delete.html', {'venta': venta})
-
-# al final del archivo core/views.py
-from django.http import JsonResponse
-from django.db.models.functions import TruncDate
-
-def ventas_data(request):
-    qs = (
-        Venta.objects
-        .annotate(fecha=TruncDate('fecha_venta'))
-        .values('fecha')
-        .annotate(total=Sum('total'))
-        .order_by('fecha')
-    )
-    data = {
-        'fechas': [item['fecha'].isoformat() for item in qs],
-        'totales': [float(item['total']) for item in qs],
-    }
-    return JsonResponse(data)
-
+    return DashboardLibroView.as_view()(request)
