@@ -1,22 +1,24 @@
 from django.db import models
 
 class Libro(models.Model):
-    titulo = models.CharField(max_length=200)
+    titulo = models.CharField(max_length=200, db_index=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_publicacion = models.DateField()
+    autores = models.ManyToManyField('Autor')
+    categorias = models.ManyToManyField('Categoria')
 
     def __str__(self):
         return self.titulo
 
 class Autor(models.Model):
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=100, db_index=True)
     nacionalidad = models.CharField(max_length=50)
 
     def __str__(self):
         return self.nombre
 
 class Categoria(models.Model):
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=100, db_index=True)
     descripcion = models.TextField(blank=True)
 
     def __str__(self):
